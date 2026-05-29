@@ -1,0 +1,48 @@
+/* Загальні стилі */
+body {
+    background-color: #f8f9fa; /* світло-сірий фон */
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Заголовки */
+h1, h2, h3 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* Картки */
+.card {
+    border-radius: 8px;
+}
+
+/* Кнопки */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Навігація */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.nav-link.active {
+    background-color: #0d6efd;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+/* Таблиця */
+.table th a {
+    text-decoration: none;
+}
+
+.table th a:hover {
+    text-decoration: underline;
+}
+
+/* Пагінація */
+.pagination .page-link {
+    border-radius: 6px;
+}

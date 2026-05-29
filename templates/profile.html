@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm" style="max-width: 500px; margin: auto;">
+    <div class="card-body text-center">
+      <!-- Аватар -->
+      <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}"
+           alt="Avatar"
+           class="rounded-circle mb-3"
+           width="120" height="120">
+
+      <!-- Ім'я користувача -->
+      <h4 class="card-title">{{ current_user.username }}</h4>
+      <p class="text-muted">Your profile settings</p>
+
+      <!-- Форма -->
+      <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3 text-start">
+          {{ form.email.label }}
+          {{ form.email(class="form-control") }}
+        </div>
+
+        <div class="mb-3 text-start">
+          {{ form.password.label }}
+          {{ form.password(class="form-control") }}
+        </div>
+
+        <div class="mb-3 text-start">
+          {{ form.avatar.label }}
+          {{ form.avatar(class="form-control") }}
+        </div>
+
+        {{ form.submit(class="btn btn-primary w-100") }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

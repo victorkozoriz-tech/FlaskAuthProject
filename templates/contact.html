@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Зворотній зв’язок
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('contact') }}">
+                        <!-- Ім'я користувача -->
+                        <div class="mb-3">
+                            <label class="form-label">Ваше ім’я</label>
+                            <input type="text" class="form-control" 
+                                   value="{{ current_user.username }}" readonly>
+                        </div>
+
+                        <!-- Email користувача -->
+                        <div class="mb-3">
+                            <label class="form-label">Ваш Email</label>
+                            <input type="email" class="form-control" 
+                                   value="{{ current_user.email }}" readonly>
+                        </div>
+
+                        <!-- Повідомлення -->
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Повідомлення</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                        </div>
+
+                        <!-- Кнопка -->
+                        <button type="submit" class="btn btn-success">
+                            Відправити
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
