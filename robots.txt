@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /static/private
+Allow: /
+
+Sitemap: https://victor-site.xyz/sitemap.xml
+Sitemap: https://victor-site.biz.ua/sitemap.xml

@@ -1,0 +1,18 @@
+# Віртуальне середовище
+venv/
+
+# Кеш Python
+__pycache__/
+
+# Бази даних SQLite
+*.db
+instance/
+
+# Логи
+*.log
+
+# Міграції (якщо не хочеш їх зберігати)
+migrations/
+
+# IDE файли
+.vscode/
