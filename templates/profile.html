@@ -1,4 +1,15 @@
 {% extends "layout.html" %}
+
+{% block title %}Профіль{% endblock %}
+
+{% block meta %}
+  <meta name="description" content="Сторінка профілю користувача з даними акаунта.">
+  <meta name="keywords" content="Flask, Python, профіль, акаунт, користувач">
+  <meta property="og:title" content="Victor Site – Профіль">
+  <meta property="og:description" content="Сторінка профілю користувача з даними акаунта.">
+  <meta property="og:url" content="https://victor-site.xyz/profile">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <div class="card shadow-sm" style="max-width: 500px; margin: auto;">
