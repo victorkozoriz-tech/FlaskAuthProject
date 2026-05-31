@@ -283,6 +283,12 @@ def robots():
 def sitemap():
     return send_from_directory(app.root_path, 'sitemap.xml')
 
+@app.before_request
+def enforce_domain():
+    url = request.url.replace("www.victor-site.xyz", "victor-site.xyz")
+    if request.host.startswith("www."):
+        return redirect(url, code=301)
+
 # ------------------ MAIN ------------------
 if __name__ == "__main__":
     app.run(debug=True)
