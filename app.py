@@ -110,17 +110,14 @@ def register():
 
         # Перевірка унікальності
         if User.query.filter_by(username=username).first():
-            flash('Username already exists!')
+            flash('Username already exists!', "danger")
             return redirect(url_for('register'))
         if User.query.filter_by(email=email).first():
-            flash('Email already exists!')
+            flash('Email already exists!', "danger")
             return redirect(url_for('register'))
 
         # Якщо логін = admin і пароль = admin123 → роль admin
-        if username == "admin" and password == "admin123":
-            role = "admin"
-        else:
-            role = "user"
+        role = "admin" if username == "admin" and password == "admin123" else "user"
 
         # Створення нового користувача
         new_user = User(
@@ -128,17 +125,18 @@ def register():
             email=email,
             password=generate_password_hash(password, method='pbkdf2:sha256'),
             role=role,
-            confirmed=True   # тимчасово без перевірки email
+            confirmed=True
         )
         db.session.add(new_user)
         db.session.commit()
 
-        flash('Registration successful! You can now log in.')
-        return redirect(url_for('login'))
+        # ✅ автоматичний логін після реєстрації
+        login_user(new_user)
+
+        flash('Реєстрація успішна! Ви можете залишити повідомлення.', "success")
+        return redirect(url_for('contact'))
 
     return render_template('register.html')
-
-
 
 @app.route("/confirm/<token>")
 def confirm_email(token):
@@ -162,7 +160,7 @@ def confirm_email(token):
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        username_or_email = form.username.data
+        username_or_email = form.username_or_email.data
         password = form.password.data
 
         # Пошук користувача по username або email
@@ -171,19 +169,19 @@ def login():
         ).first()
 
         if not user or not check_password_hash(user.password, password):
-            flash('Invalid credentials!')
+            flash('Invalid credentials!', "danger")
             return redirect(url_for('login'))
 
+        # ✅ автоматичний логін
         login_user(user)
-        flash('Logged in successfully!')
+        flash('Вхід успішний!', "success")
 
-        # Перенаправлення залежно від ролі
+        # ✅ перенаправлення залежно від ролі
         if user.role == "admin":
             return redirect(url_for('admin'))
         else:
             return redirect(url_for('contact'))
-        
-      
+
     return render_template('login.html', form=form)
 
 

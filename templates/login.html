@@ -35,17 +35,19 @@
 
                     <!-- Форма -->
                     <form method="POST" action="{{ url_for('login') }}">
+                        {{ form.hidden_tag() }}
+
                         <div class="mb-3">
-                            <label for="email" class="form-label">Електронна пошта</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            {{ form.username_or_email.label(class="form-label") }}
+                            {{ form.username_or_email(class="form-control", placeholder="Введіть ім'я або email") }}
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">Пароль</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control", placeholder="Пароль") }}
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Увійти</button>
+                        {{ form.submit(class="btn btn-primary w-100") }}
                     </form>
                 </div>
                 <div class="card-footer text-center">
