@@ -156,12 +156,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ContactForm, RegisterForm, LoginForm
 from flask_mail import Mail, Message as MailMessage
 from flask_migrate import Migrate
-from datetime import timezone, datetime
+from datetime import datetime, timezone 
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField
 from wtforms.validators import DataRequired, Email, Length
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
 from flask_wtf.file import FileAllowed
 
 import itsdangerous
@@ -250,6 +251,10 @@ def load_user(user_id):
 
 
 with app.app_context():
+    # створення таблиць
+    db.create_all()
+
+    # створення адміна, якщо його немає
     existing_admin = db.session.execute(
         db.select(User).filter_by(username="admin")
     ).scalar_one_or_none()
@@ -261,7 +266,8 @@ with app.app_context():
             password=generate_password_hash("admin123", method="pbkdf2:sha256"),
             role="admin",
             confirmed=True,
-            avatar="default.png"
+            avatar="default.png",
+            created_at=datetime.now(timezone.utc)  # якщо є поле часу
         )
         db.session.add(admin)
         db.session.commit()
