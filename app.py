@@ -156,7 +156,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ContactForm, RegisterForm, LoginForm
 from flask_mail import Mail, Message as MailMessage
 from flask_migrate import Migrate
-from datetime import timezone
+from datetime import timezone, datetime
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField
@@ -233,7 +233,7 @@ class Message(db.Model):
     username = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 
@@ -479,7 +479,7 @@ def admin():
     kyiv_tz = pytz.timezone("Europe/Kyiv")
     for msg in messages:
         if msg.created_at:
-            msg.created_at = msg.created_at.replace(tzinfo=timezone.utc).astimezone(kyiv_tz)
+            msg.created_at = msg.created_at.astimezone(kyiv_tz)
 
     return render_template(
         "admin.html",
