@@ -29,7 +29,7 @@
                 <td>{{ msg.username }}</td>
                 <td>{{ msg.email }}</td>
                 <td>{{ msg.message }}</td>
-                <td>{{ msg.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ msg.display_time }}</td>  <!-- ✅ тепер дата+час у Europe/Kyiv -->
                 <td>
                     <form method="POST" action="{{ url_for('delete_message', msg_id=msg.id) }}">
                         <button type="submit" class="btn btn-danger btn-sm"

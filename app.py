@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ContactForm, RegisterForm, LoginForm
 from flask_mail import Mail, Message as MailMessage
 from flask_migrate import Migrate
-
+from datetime import datetime, timezone
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField
@@ -15,6 +15,7 @@ from flask_wtf.file import FileAllowed
 
 import itsdangerous
 import os
+from itsdangerous import URLSafeTimedSerializer
 
 app = Flask(__name__)
 
@@ -32,160 +33,7 @@ app.config['MAIL_DEFAULT_SENDER'] = "viktorkozoriz@ukr.net"
 db = SQLAlchemy(app)
 mail = Mail(app)
 serializer = itsdangerous.URLSafeTimedSerializer(app.config['SECRET_KEY'])
-
-def confirm_token(token, expiration=3600):
-    try:
-        email = serializer.loads(token, salt="email-confirm", max_age=expiration)
-    except itsdangerous.SignatureExpired:
-        # Токен прострочений
-        return None
-    except itsdangerous.BadSignature:
-        # Токен недійсний
-        return None
-    return email
-
-migrate = Migrate(app, db)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
-
-# ------------------ MODELS ------------------
-class ProfileForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('New Password', validators=[Length(min=6)])
-    avatar = FileField('Upload Avatar', validators=[FileAllowed(['jpg', 'png', 'jpeg'])])
-    submit = SubmitField('Update')
-
-class User(UserMixin, db.Model):
-    __tablename__ = "user"
-    __table_args__ = (
-        db.UniqueConstraint("email", name="uq_user_email"),
-    )
-    def __repr__(self):
-        return f"<User {self.username}>"
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(150), nullable=False)
-    password = db.Column(db.String(150), nullable=False)
-    role = db.Column(db.String(50), default="user")
-    confirmed = db.Column(db.Boolean, default=False)
-    avatar = db.Column(db.String(200), default="default.png")
- 
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-
-
-with app.app_context():
-    db.create_all()
-
-
-
-# ------------------ LOGIN MANAGER ------------------
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-with app.app_context():
-    if not User.query.filter_by(username="admin").first():
-        admin = User(
-            username="admin",
-            email="admin@example.com",
-            password=generate_password_hash("admin123", method="pbkdf2:sha256"),
-            role="admin",
-            confirmed=True,
-            avatar="default.png"
-        )
-        db.session.add(admin)
-        db.session.commit()
-        print("Admin user created successfully!")
-# ------------------ ROUTES ------------------
-@app.route("/")
-def index():
-    return render_template("index.html", active="index")
-
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        # Перевірка унікальності
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists!', "danger")
-            return redirect(url_for('register'))
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists!', "danger")
-            return redirect(url_for('register'))
-
-        # Якщо логін = admin і пароль = admin123 → роль admin
-        role = "admin" if username == "admin" and password == "admin123" else "user"
-
-        # Створення нового користувача
-        new_user = User(
-            username=username,
-            email=email,
-            password=generate_password_hash(password, method='pbkdf2:sha256'),
-            role=role,
-            confirmed=False
-        )
-        db.session.add(new_user)
-        db.session.commit()
-
-        # ✅ Генерація токена
-        token = serializer.dumps(new_user.email, salt="email-confirm")
-        confirm_url = url_for('confirm_email', token=token, _external=True)
-
-        # ✅ Надсилання HTML‑листа
-        from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from forms import ContactForm, RegisterForm, LoginForm
-from flask_mail import Mail, Message as MailMessage
-from flask_migrate import Migrate
-from datetime import datetime, timezone 
-
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, FileField
-from wtforms.validators import DataRequired, Email, Length
-from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash
-from flask_wtf.file import FileAllowed
-
-import itsdangerous
-import os
-import pytz
-
-app = Flask(__name__)
-
-app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-
-app.config['MAIL_SERVER'] = "smtp.ukr.net"
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USERNAME'] = "viktorkozoriz@ukr.net"
-app.config['MAIL_PASSWORD'] = "3iEbxpjaqwfI0t8S"
-app.config['MAIL_DEFAULT_SENDER'] = "viktorkozoriz@ukr.net"
-
-db = SQLAlchemy(app)
-mail = Mail(app)
-serializer = itsdangerous.URLSafeTimedSerializer(app.config['SECRET_KEY'])
-kyiv_tz = pytz.timezone("Europe/Kyiv")
+s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 def confirm_token(token, expiration=3600):
     try:
@@ -237,7 +85,6 @@ class Message(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 
-
 with app.app_context():
     db.create_all()
 
@@ -249,30 +96,19 @@ with app.app_context():
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-
 with app.app_context():
-    # створення таблиць
-    db.create_all()
-
-    # створення адміна, якщо його немає
-    existing_admin = db.session.execute(
-        db.select(User).filter_by(username="admin")
-    ).scalar_one_or_none()
-
-    if not existing_admin:
+    if not User.query.filter_by(username="admin").first():
         admin = User(
             username="admin",
             email="admin@example.com",
             password=generate_password_hash("admin123", method="pbkdf2:sha256"),
             role="admin",
             confirmed=True,
-            avatar="default.png",
-            created_at=datetime.now(timezone.utc)  # якщо є поле часу
+            avatar="default.png"
         )
         db.session.add(admin)
         db.session.commit()
         print("Admin user created successfully!")
-
 # ------------------ ROUTES ------------------
 @app.route("/")
 def index():
@@ -286,26 +122,18 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # ✅ Перевірка унікальності username
-        existing_user = db.session.execute(
-            db.select(User).filter_by(username=username)
-        ).scalar_one_or_none()
-        if existing_user:
+        # Перевірка унікальності
+        if User.query.filter_by(username=username).first():
             flash('Username already exists!', "danger")
             return redirect(url_for('register'))
-
-        # ✅ Перевірка унікальності email
-        existing_email = db.session.execute(
-            db.select(User).filter_by(email=email)
-        ).scalar_one_or_none()
-        if existing_email:
+        if User.query.filter_by(email=email).first():
             flash('Email already exists!', "danger")
             return redirect(url_for('register'))
 
-        # ✅ Визначення ролі
+        # Якщо логін = admin і пароль = admin123 → роль admin
         role = "admin" if username == "admin" and password == "admin123" else "user"
 
-        # ✅ Створення нового користувача
+        # Створення нового користувача
         new_user = User(
             username=username,
             email=email,
@@ -388,8 +216,9 @@ def login():
         ).scalar_one_or_none()
 
         if not user or not check_password_hash(user.password, password):
-            flash('Invalid credentials!', "danger")
+            flash('Невірні дані! Якщо ви забули пароль, скористайтесь відновленням.', "danger")
             return redirect(url_for('login'))
+
 
         # ❌ Якщо email не підтверджено → повторна відправка листа
         if not user.confirmed and user.role != "admin":
@@ -479,13 +308,14 @@ def admin():
     total_messages = db.session.execute(db.select(db.func.count(Message.id))).scalar()
     total_pages = (total_messages + per_page - 1) // per_page
 
-    # конвертація часу у Europe/Kyiv
+    # конвертація часу у Europe/Kyiv + форматування
     from datetime import timezone
     import pytz
     kyiv_tz = pytz.timezone("Europe/Kyiv")
     for msg in messages:
         if msg.created_at:
-            msg.created_at = msg.created_at.astimezone(kyiv_tz)
+            msg.created_at = msg.created_at.replace(tzinfo=timezone.utc).astimezone(kyiv_tz)
+            msg.display_time = msg.created_at.strftime("%d.%m.%Y %H:%M")
 
     return render_template(
         "admin.html",
@@ -502,11 +332,63 @@ def delete_message(msg_id):
         flash("Доступ заборонено.")
         return redirect(url_for("index"))
 
-    message = Message.query.get_or_404(msg_id)
+    message = db.session.get(Message, msg_id)
+    if not message:
+        abort(404)
     db.session.delete(message)
     db.session.commit()
     flash("Повідомлення видалено.")
     return redirect(url_for("admin"))
+
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email")
+        user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
+        if user:
+            token = serializer.dumps(user.email, salt="password-reset-salt")
+            reset_url = url_for("reset_password", token=token, _external=True)
+
+            msg = MailMessage(
+                subject="Відновлення паролю",
+                recipients=[user.email]
+            )
+            msg.body = f"Щоб відновити пароль, перейдіть за посиланням: {reset_url}"
+            msg.html = f"""
+            <html>
+              <body>
+                <h2>Привіт, {user.username}!</h2>
+                <p>Щоб відновити пароль, натисніть посилання нижче:</p>
+                <p><a href="{reset_url}">Відновити пароль</a></p>
+                <p>Посилання діє 1 годину.</p>
+              </body>
+            </html>
+            """
+            mail.send(msg)
+            flash("Лист для відновлення паролю надіслано!", "info")
+            return redirect(url_for("login"))
+        else:
+            flash("Користувача з таким email не знайдено.", "danger")
+    return render_template("forgot_password.html")
+
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt="password-reset-salt", max_age=3600)  # токен діє 1 годину
+    except:
+        flash("Токен недійсний або прострочений.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
+
+    if request.method == "POST":
+        new_password = request.form.get("password")
+        user.password = generate_password_hash(new_password, method="pbkdf2:sha256")
+        db.session.commit()
+        flash("Пароль успішно змінено!", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
