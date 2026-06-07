@@ -16,3 +16,4 @@ migrations/
 
 # IDE файли
 .vscode/
+versions/
