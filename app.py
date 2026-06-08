@@ -166,14 +166,20 @@ def register():
           </body>
         </html>
         """
-        print("Sending email to:", new_user.email)
-        mail.send(msg)
 
-        flash("Реєстрація успішна! Перевірте вашу пошту для підтвердження.", "info")
+        print("Sending email to:", new_user.email)
+
+        try:  
+            mail.send(msg)
+            flash("Реєстрація успішна! Перевірте вашу пошту для підтвердження.", "info")
+        except Exception as e:
+            print("Email error:", e)
+            flash("Реєстрація успішна, але лист не вдалося надіслати.", "warning")
+
         return redirect(url_for('login'))
 
+    # Якщо GET → просто показати форму
     return render_template('register.html')
-
 
 
 @app.route("/confirm/<token>")
