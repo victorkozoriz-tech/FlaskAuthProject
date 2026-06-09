@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ContactForm, RegisterForm, LoginForm
-from flask_mail import Mail, Message as MailMessage
 from flask_migrate import Migrate
 from datetime import datetime, timezone
 
@@ -14,24 +13,17 @@ from werkzeug.utils import secure_filename
 from flask_wtf.file import FileAllowed
 
 import itsdangerous
+import resend
 import os
 from itsdangerous import URLSafeTimedSerializer
-
+import pytz
 app = Flask(__name__)
-
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
-app.config['MAIL_SERVER'] = "smtp.ukr.net"
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USERNAME'] = "viktorkozoriz@ukr.net"
-app.config['MAIL_PASSWORD'] = "3iEbxpjaqwfI0t8S"
-app.config['MAIL_DEFAULT_SENDER'] = "viktorkozoriz@ukr.net"
-
 db = SQLAlchemy(app)
-mail = Mail(app)
+migrate = Migrate(app, db)
+
 serializer = itsdangerous.URLSafeTimedSerializer(app.config['SECRET_KEY'])
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
@@ -51,6 +43,44 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
+
+def send_confirmation_email(new_user, confirm_url):
+    try:
+        resend.Emails.send({
+            "from": "noreply@victor-site.xyz",   # твій домен
+            "to": new_user.email,
+            "subject": "Підтвердження реєстрації",
+            "html": f"""
+                <h2>Привіт, {new_user.username}!</h2>
+                <p>Дякуємо за реєстрацію на <strong>Victor Site</strong>.</p>
+                <p>Щоб підтвердити акаунт, натисніть посилання нижче:</p>
+                <p><a href="{confirm_url}">Підтвердити акаунт</a></p>
+                <p>Якщо кнопка не працює, скопіюйте це посилання у браузер:<br>
+                {confirm_url}</p>
+            """
+        })
+        print("Email sent to:", new_user.email)
+    except Exception as e:
+        print("Email error:", e)
+
+def send_reset_email(user, reset_url):
+    try:
+        resend.Emails.send({
+            "from": "noreply@victor-site.xyz",
+            "to": user.email,
+            "subject": "Відновлення паролю",
+            "html": f"""
+                <h2>Привіт, {user.username}!</h2>
+                <p>Щоб відновити пароль, натисніть посилання нижче:</p>
+                <p><a href="{reset_url}">Відновити пароль</a></p>
+                <p>Посилання діє 1 годину.</p>
+            """
+        })
+        print("Reset email sent to:", user.email)
+    except Exception as e:
+        print("Email error:", e)
 
 
 # ------------------ MODELS ------------------
@@ -130,10 +160,8 @@ def register():
             flash('Email already exists!', "danger")
             return redirect(url_for('register'))
 
-        # Якщо логін = admin і пароль = admin123 → роль admin
         role = "admin" if username == "admin" and password == "admin123" else "user"
 
-        # Створення нового користувача
         new_user = User(
             username=username,
             email=email,
@@ -144,42 +172,16 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        # ✅ Генерація токена
         token = serializer.dumps(new_user.email, salt="email-confirm")
-        confirm_url = url_for('confirm_email', token=token, _external=True)
+        confirm_url = url_for("confirm_email", token=token, _external=True)
+        send_confirmation_email(new_user, confirm_url)
 
-        # ✅ Надсилання листа
-        msg = MailMessage(
-            subject="Підтвердження реєстрації",
-            recipients=[new_user.email]
-        )
-        msg.body = f"Привіт, {new_user.username}! Перейдіть за посиланням для підтвердження: {confirm_url}"
-        msg.html = f"""
-        <html>
-          <body>
-            <h2>Привіт, {new_user.username}!</h2>
-            <p>Дякуємо за реєстрацію на <strong>Victor Site</strong>.</p>
-            <p>Щоб підтвердити акаунт, натисніть посилання нижче:</p>
-            <p><a href="{confirm_url}">Підтвердити акаунт</a></p>
-            <p>Якщо кнопка не працює, скопіюйте це посилання у браузер:<br>
-            {confirm_url}</p>
-          </body>
-        </html>
-        """
+        flash("Реєстрація успішна! Перевірте вашу пошту для підтвердження.", "info")
+        return redirect(url_for("login"))
 
-        print("Sending email to:", new_user.email)
+    # ✅ якщо GET-запит — показати форму
+    return render_template("register.html")
 
-        try:  
-            mail.send(msg)
-            flash("Реєстрація успішна! Перевірте вашу пошту для підтвердження.", "info")
-        except Exception as e:
-            print("Email error:", e)
-            flash("Реєстрація успішна, але лист не вдалося надіслати.", "warning")
-
-        return redirect(url_for('login'))
-
-    # Якщо GET → просто показати форму
-    return render_template('register.html')
 
 
 @app.route("/confirm/<token>")
@@ -225,30 +227,13 @@ def login():
             flash('Невірні дані! Якщо ви забули пароль, скористайтесь відновленням.', "danger")
             return redirect(url_for('login'))
 
-
-        # ❌ Якщо email не підтверджено → повторна відправка листа
+        # ❌ Якщо email не підтверджено → повторна відправка листа через Resend
         if not user.confirmed and user.role != "admin":
             token = serializer.dumps(user.email, salt="email-confirm")
             confirm_url = url_for('confirm_email', token=token, _external=True)
 
-            msg = MailMessage(
-                subject="Підтвердження реєстрації",
-                recipients=[user.email]
-            )
-            msg.body = f"Привіт, {user.username}! Перейдіть за посиланням для підтвердження: {confirm_url}"
-            msg.html = f"""
-            <html>
-              <body>
-                <h2>Привіт, {user.username}!</h2>
-                <p>Щоб підтвердити акаунт, натисніть посилання нижче:</p>
-                <p><a href="{confirm_url}">Підтвердити акаунт</a></p>
-                <p>Якщо кнопка не працює, скопіюйте це посилання у браузер:<br>
-                {confirm_url}</p>
-              </body>
-            </html>
-            """
-            print("Resending confirmation email to:", user.email)
-            mail.send(msg)
+            # ✅ Виклик Resend
+            send_confirmation_email(user, confirm_url)
 
             flash("Будь ласка, підтвердіть вашу електронну пошту. Ми повторно надіслали лист із підтвердженням.", "warning")
             return redirect(url_for('login'))
@@ -264,6 +249,7 @@ def login():
             return redirect(url_for('contact'))
 
     return render_template('login.html', form=form)
+
 
 @app.route("/logout")
 @login_required
@@ -315,13 +301,12 @@ def admin():
     total_pages = (total_messages + per_page - 1) // per_page
 
     # конвертація часу у Europe/Kyiv + форматування
-    from datetime import timezone
-    import pytz
     kyiv_tz = pytz.timezone("Europe/Kyiv")
     for msg in messages:
         if msg.created_at:
-            msg.created_at = msg.created_at.replace(tzinfo=timezone.utc).astimezone(kyiv_tz)
-            msg.display_time = msg.created_at.strftime("%d.%m.%Y %H:%M")
+            utc_time = msg.created_at.replace(tzinfo=timezone.utc)
+            local_time = utc_time.astimezone(kyiv_tz)
+            msg.display_time = local_time.strftime("%d.%m.%Y %H:%M")
 
     return render_template(
         "admin.html",
@@ -330,6 +315,7 @@ def admin():
         total_pages=total_pages,
         active="admin"
     )
+
 
 @app.route("/delete/<int:msg_id>", methods=["POST"])
 @login_required
@@ -355,22 +341,9 @@ def forgot_password():
             token = serializer.dumps(user.email, salt="password-reset-salt")
             reset_url = url_for("reset_password", token=token, _external=True)
 
-            msg = MailMessage(
-                subject="Відновлення паролю",
-                recipients=[user.email]
-            )
-            msg.body = f"Щоб відновити пароль, перейдіть за посиланням: {reset_url}"
-            msg.html = f"""
-            <html>
-              <body>
-                <h2>Привіт, {user.username}!</h2>
-                <p>Щоб відновити пароль, натисніть посилання нижче:</p>
-                <p><a href="{reset_url}">Відновити пароль</a></p>
-                <p>Посилання діє 1 годину.</p>
-              </body>
-            </html>
-            """
-            mail.send(msg)
+            # ✅ Виклик Resend замість Flask-Mail
+            send_reset_email(user, reset_url)
+
             flash("Лист для відновлення паролю надіслано!", "info")
             return redirect(url_for("login"))
         else:
