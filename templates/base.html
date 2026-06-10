@@ -19,6 +19,8 @@
     <!-- Стилі -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
@@ -49,5 +51,15 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </div>
+    <footer>
+        <p>© <script>document.write(new Date().getFullYear());</script> victor-site.xyz</p>
+        <p>Версія 1.0 | Розроблено: <strong>Copilot + Viktor</strong></p>
+        <p><a href="/contacts">Контакти</a> | <a href="/privacy">Політика конфіденційності</a></p>
+        <div class="social-icons">
+        <a href="https://github.com/victor-site" target="_blank"><i class="fab fa-github"></i></a>
+        <a href="https://t.me/victor-site" target="_blank"><i class="fab fa-telegram"></i></a>
+  </div>
+   </footer>
+
 </body>
 </html>

@@ -1,0 +1,48 @@
+footer {
+  background: #f9f9f9;       /* світлий фон */
+  color: #333;               /* темний текст */
+  padding: 20px;
+  text-align: center;
+  font-size: 0.9em;
+  border-top: 1px solid #ddd; /* тонка сіра лінія зверху */
+}
+
+footer p {
+  margin: 5px 0;
+}
+
+footer a {
+  display: inline-block;
+  margin: 0 10px;
+  color: #007acc;            /* акцентний синій */
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #005f99;            /* темніший синій при наведенні */
+}
+
+footer .social-icons {
+  margin-top: 10px;
+}
+
+footer .social-icons a {
+  display: inline-block;
+  margin: 0 5px;
+  font-size: 1.2em;
+  color: #555;               /* нейтральний колір іконок */
+}
+
+footer .social-icons a:hover {
+  color: #007acc;            /* синій при наведенні */
+}
+
+@media (max-width: 576px) {
+  footer {
+    font-size: 0.8em;
+    padding: 10px;
+  }
+  footer .social-icons a {
+    font-size: 1em;
+  }
+}
