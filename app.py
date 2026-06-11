@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ContactForm, RegisterForm, LoginForm
 from flask_migrate import Migrate
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField
@@ -20,6 +20,9 @@ import pytz
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(minutes=30)  # або години/дні
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -140,6 +143,11 @@ with app.app_context():
         db.session.commit()
         print("Admin user created successfully!")
 # ------------------ ROUTES ------------------
+@app.before_request
+def make_session_non_permanent():
+    # ❌ забороняємо "довгі" cookie
+    session.permanent = False
+
 @app.route("/")
 def index():
     return render_template("index.html", active="index")
@@ -239,7 +247,7 @@ def login():
             return redirect(url_for('login'))
 
         # ✅ автоматичний логін
-        login_user(user)
+        login_user(user, remember=False)
         flash('Вхід успішний!', "success")
 
         # ✅ перенаправлення залежно від ролі
