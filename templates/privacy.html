@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Privacy Policy{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Privacy Policy</h2>
+  <p>We value your privacy and are committed to protecting your personal information. This page explains how we collect, use, and safeguard your data.</p>
+  
+  <h4>Information We Collect</h4>
+  <p>We may collect your name, email, and messages you send via our contact form.</p>
+  
+  <h4>How We Use Information</h4>
+  <p>Your data is used only to respond to your inquiries and improve our services.</p>
+  
+  <h4>Data Protection</h4>
+  <p>We implement security measures to protect your information from unauthorized access.</p>
+  
+  <h4>Contact Us</h4>
+  <p>If you have any questions about this Privacy Policy, please contact us via the <a href="{{ url_for('contact') }}">Contact page</a>.</p>
+</div>
+{% endblock %}

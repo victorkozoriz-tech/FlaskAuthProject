@@ -31,11 +31,23 @@
         <a class="navbar-brand" href="{{ url_for('index') }}">FlaskAuthProject</a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link {% if active=='index' %}active{% endif %}" href="{{ url_for('index') }}">Головна</a></li>
-                <li class="nav-item"><a class="nav-link {% if active=='contact' %}active{% endif %}" href="{{ url_for('contact') }}">Контакт</a></li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active=='index' %}active{% endif %}" href="{{ url_for('index') }}">Головна</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active=='contact' %}active{% endif %}" href="{{ url_for('contact') }}">Форма звернення</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active=='contacts' %}active{% endif %}" href="{{ url_for('contacts') }}">Контакти</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active=='privacy' %}active{% endif %}" href="{{ url_for('privacy') }}">Політика конфіденційності</a>
+                </li>
                 {% if current_user.is_authenticated %}
                     {% if current_user.role == 'admin' %}
-                        <li class="nav-item"><a class="nav-link {% if active=='admin' %}active{% endif %}" href="{{ url_for('admin') }}">Адмін</a></li>
+                       <li class="nav-item">
+                           <a class="nav-link {% if active=='admin' %}active{% endif %}" href="{{ url_for('admin') }}">Адмін</a>
+                        </li>
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Вихід</a></li>
                 {% else %}
@@ -43,6 +55,7 @@
                     <li class="nav-item"><a class="nav-link {% if active=='register' %}active{% endif %}" href="{{ url_for('register') }}">Реєстрація</a></li>
                 {% endif %}
             </ul>
+
         </div>
     </div>
 </nav>

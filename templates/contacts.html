@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block title %}Контакти{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Контакти розробника</h2>
+  
+  <p>Зв’язатися зі мною можна напряму:</p>
+  
+  <ul class="list-group mb-4">
+    <li class="list-group-item">
+      <i class="fas fa-phone"></i> Телефон: <a href="tel:+380671234567">+38 (067) 123‑45‑67</a>
+    </li>
+    <li class="list-group-item">
+      <i class="fas fa-envelope"></i> Email: <a href="mailto:viktor@example.com">viktor@example.com</a>
+    </li>
+    <li class="list-group-item">
+      <i class="fab fa-telegram"></i> Telegram: <a href="https://t.me/viktorkozoriz" target="_blank">@viktorkozoriz</a>
+    </li>
+    <li class="list-group-item">
+      <i class="fab fa-github"></i> GitHub: <a href="https://github.com/victorkozoriz-tech" target="_blank">victorkozoriz-tech</a>
+    </li>
+  </ul>
+
+  <p>Або скористайтеся <a href="{{ url_for('contact') }}">формою звернення</a>, якщо хочете залишити повідомлення через сайт.</p>
+</div>
+{% endblock %}

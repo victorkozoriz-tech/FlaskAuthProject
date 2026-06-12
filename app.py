@@ -399,6 +399,15 @@ def profile():
         return redirect(url_for('profile'))
 
     return render_template('profile.html', form=form)
+# Сторінка з контактами розробника (телефони, email, соцмережі)
+@app.route("/contacts")
+def contacts():
+    return render_template("contacts.html", active="contacts")
+
+# Сторінка політики конфіденційності
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html", active="privacy")
 
 @app.route('/robots.txt')
 def robots():
