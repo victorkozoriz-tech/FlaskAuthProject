@@ -11,6 +11,12 @@
 
 {% block content %}
 <div class="container mt-4 text-center">
+    <!-- Логотип -->
+    <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="Victor Site Logo" 
+         class="img-fluid mb-4" 
+         style="max-width: 180px;">
+
     <h1 class="mb-4">Ласкаво просимо до FlaskAuthProject!</h1>
     <p class="lead">Це приклад додатку з авторизацією, контактною формою та адмін‑панеллю.</p>
 
