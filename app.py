@@ -19,7 +19,8 @@ from itsdangerous import URLSafeTimedSerializer
 import pytz
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+
 
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(minutes=30)  # або години/дні
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
