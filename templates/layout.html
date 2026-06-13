@@ -41,13 +41,8 @@
                     <a class="nav-link {% if active=='index' %}active{% endif %}" href="{{ url_for('index') }}">Головна</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if active=='contact' %}active{% endif %}" href="{{ url_for('contact') }}">Форма звернення</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active=='contacts' %}active{% endif %}" href="{{ url_for('contacts') }}">Контакти</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active=='privacy' %}active{% endif %}" href="{{ url_for('privacy') }}">Політика конфіденційності</a>
+                    <a class="nav-link {% if active=='contact' %}active{% endif %}" href="{{ url_for('contact') }}">Надіслати повідомлення</a>
+                             
                 </li>
                 {% if current_user.is_authenticated %}
                     {% if current_user.role == 'admin' %}
