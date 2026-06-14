@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block title %}Відповідь на повідомлення{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Відповідь користувачу</h2>
+  <p><strong>Від:</strong> {{ msg.name }} ({{ msg.email }})</p>
+  <p><strong>Повідомлення:</strong> {{ msg.message }}</p>
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="subject" class="form-label">Тема</label>
+      <input type="text" class="form-control" id="subject" name="subject" required>
+    </div>
+    <div class="mb-3">
+      <label for="body" class="form-label">Текст відповіді</label>
+      <textarea class="form-control" id="body" name="body" rows="5" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Надіслати відповідь</button>
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary">Назад</a>
+  </form>
+</div>
+{% endblock %}

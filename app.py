@@ -14,7 +14,7 @@ from flask_wtf.file import FileAllowed
 
 import itsdangerous
 import resend
-import os
+import requests, os
 from itsdangerous import URLSafeTimedSerializer
 import pytz
 app = Flask(__name__)
@@ -325,6 +325,36 @@ def admin():
         active="admin"
     )
 
+@app.route("/reply/<int:msg_id>", methods=["GET", "POST"])
+def reply_message(msg_id):
+    # Отримуємо повідомлення з бази (припустимо, модель Message)
+    msg = Message.query.get_or_404(msg_id)
+
+    if request.method == "POST":
+        subject = request.form.get("subject")
+        body = request.form.get("body")
+        to_email = msg.email  # email користувача з повідомлення
+
+        api_key = os.getenv("RESEND_API_KEY")
+        response = requests.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "from": "admin@victor-site.xyz",
+                "to": to_email,
+                "subject": subject,
+                "html": body
+            }
+        )
+
+        if response.status_code == 200:
+            flash("Відповідь успішно надіслана!", "success")
+        else:
+            flash("Помилка при відправці відповіді.", "danger")
+
+        return redirect(url_for("admin"))
+
+    return render_template("reply.html", msg=msg, active="admin")
 
 @app.route("/delete/<int:msg_id>", methods=["POST"])
 @login_required
